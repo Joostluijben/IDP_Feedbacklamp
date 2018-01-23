@@ -24,3 +24,20 @@ SensorID INT,
 Decibel INT,
 PRIMARY KEY(SensorID)
 );
+
+
+ALTER TABLE lamp
+ADD CONSTRAINT fk_lamp
+FOREIGN KEY (SensorID) REFERENCES sensor(SensorID) ;
+
+CREATE INDEX idx_DocentID ON klas (DocentID) ;
+
+ALTER TABLE docent
+ADD CONSTRAINT fk_Docent
+FOREIGN KEY (DocentID) REFERENCES klas(DocentID);
+
+CREATE INDEX idx_LampID ON klas (LampID) ;
+
+ALTER TABLE lamp
+ADD CONSTRAINT fk_lamp
+FOREIGN KEY (LampID) REFERENCES klas(LampID);
