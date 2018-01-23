@@ -1,4 +1,13 @@
 CREATE DATABASE idp_project
+USE idp_project;
+
+SET FOREIGN_KEY_CHECKS=0;
+DROP TABLE Docent;
+DROP TABLE Klas;
+DROP TABLE Sensor;
+DROP TABLE Lamp;
+SET FOREIGN_KEY_CHECKS=1;
+
 CREATE TABLE Docent  (
 DocentID INT NOT NULL AUTO_INCREMENT,
 Gebruikersnaam VARCHAR(50),
@@ -38,5 +47,5 @@ ALTER TABLE Lamp
 ADD CONSTRAINT Lamp_Sensor
 FOREIGN KEY (SensorID) REFERENCES Sensor(SensorID);
 
-INSERT INTO docent (Gebruikersnaam, Wachtwoord, Email)
+INSERT INTO Docent (Gebruikersnaam, Wachtwoord, Email)
 VALUES ('Jan_Bakker', 'Jan123', 'jan.bakker@mail.com')
