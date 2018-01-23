@@ -37,7 +37,6 @@ FOREIGN KEY (LampID) REFERENCES Lamp(LampID);
 ALTER TABLE Lamp
 ADD CONSTRAINT Lamp_Sensor
 FOREIGN KEY (SensorID) REFERENCES Sensor(SensorID);
-
 INSERT INTO docent (Gebruikersnaam, Wachtwoord, Email)
 VALUES ('Jan_Bakker', 'Jan123', 'jan.bakker@mail.com')
 
