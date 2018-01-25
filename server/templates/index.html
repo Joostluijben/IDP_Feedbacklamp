@@ -4,8 +4,13 @@
     <meta charset="utf-8">
     <title></title>
   </head>
+
+  {% if error %}
+    <p class='error'><strong>Error: </strong>{{ error }}
+  {% endif %}
   <body>
-    <form method='post' >
+    <form method='post' action=''>
+
       Gebruikersnaam:<br>
       <input type='text' name='username'><br>
       Wachtwoord:<br>
