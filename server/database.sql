@@ -2,31 +2,30 @@ DROP DATABASE idp_project;
 CREATE DATABASE idp_project;
 USE idp_project;
 
-CREATE TABLE Docent  (
-DocentID INT NOT NULL AUTO_INCREMENT,
-Gebruikersnaam VARCHAR(50),
-Wachtwoord VARCHAR(50),
-Email VARCHAR(50),
-PRIMARY KEY(DocentID)
+CREATE TABLE `Lamp` (
+  `LampID` INT,
+  `Klas` VARCHAR(20),
+  PRIMARY KEY (`LampID`)
 );
 
-
-CREATE TABLE Lamp  (
-LampID INT NOT NULL AUTO_INCREMENT,
-SensorID INT NOT NULL ,
-PRIMARY KEY(LampID)
+CREATE TABLE `Sessie` (
+  `SessieID` INT AUTO_INCREMENT,
+  `Gemeten_over_se` FLOAT,
+  `Starttijd` DATETIME,
+  `Eindtijd` DATETIME,
+  `DocentID` INT,
+  `LampID` INT,
+  PRIMARY KEY (`SessieID`),
+  KEY `FK` (`DocentID`, `LampID`)
 );
 
-CREATE TABLE Sensor  (
-SensorID INT NOT NULL AUTO_INCREMENT,
-LampID INT NOT NULL ,
-Tijd DATETIME,
-PRIMARY KEY(SensorID)
+CREATE TABLE `Docent` (
+  `DocentID` INT,
+  `Gebruikersnaam` VARCHAR(50),
+  `Wachtwoord` VARCHAR(50),
+  `Email` VARCHAR(50),
+  PRIMARY KEY (`DocentID`)
 );
-
-ALTER TABLE Lamp
-ADD CONSTRAINT Lamp_Sensor
-FOREIGN KEY (SensorID) REFERENCES Sensor(SensorID);
 
 INSERT INTO Docent (Gebruikersnaam, Wachtwoord, Email)
 VALUES ('Jan_Bakker', 'Jan123', 'jan.bakker@mail.com');
@@ -43,16 +42,5 @@ VALUES ('Eva_Dijk', 'Eva123', 'eva.dijk@mail.com');
 INSERT INTO Docent (Gebruikersnaam, Wachtwoord, Email)
 VALUES ('Sara_Bruin', 'Sara123', 'sara.bruin@mail.com');
 
-INSERT INTO Sensor (SensorID, LampID)
-VALUES ('1', '001');
-
-INSERT INTO Sensor (SensorID, LampID)
-VALUES ('2', '001');
-
-INSERT INTO Sensor (SensorID, LampID)
-VALUES ('3', '001');
-
-INSERT INTO lamp (LampID, SensorID)
-VALUES ('001', '1'); #2 en 3 moeten er ook nog bij#
-
-#decibel en Gem_Decibel en DocentID bij lamp en foreign key van docent_lamp moeten er nog bij#
+INSERT INTO Lamp (LampID, Klas)
+VALUES (1, 'A6');
