@@ -20,7 +20,7 @@ CREATE TABLE `Sessie` (
 );
 
 CREATE TABLE `Docent` (
-  `DocentID` INT,
+  `DocentID` INT AUTO_INCREMENT,
   `Gebruikersnaam` VARCHAR(50),
   `Wachtwoord` VARCHAR(50),
   `Email` VARCHAR(50),
