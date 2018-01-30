@@ -9,7 +9,7 @@ CREATE TABLE `Lamp` (
 );
 
 CREATE TABLE `Sessie` (
-  `SessieID` INT,
+  `SessieID` INT AUTO_INCREMENT,
   `Gemeten_over_se` FLOAT,
   `Starttijd` DATETIME,
   `Eindtijd` DATETIME,
