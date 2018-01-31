@@ -15,8 +15,7 @@ CREATE TABLE `Sessie` (
   `Eindtijd` DATETIME,
   `DocentID` INT,
   `LampID` INT,
-  PRIMARY KEY (`SessieID`),
-  KEY `FK` (`DocentID`, `LampID`)
+  PRIMARY KEY (`SessieID`)
 );
 
 CREATE TABLE `Docent` (
@@ -26,6 +25,13 @@ CREATE TABLE `Docent` (
   `Email` VARCHAR(50),
   PRIMARY KEY (`DocentID`)
 );
+
+ALTER TABLE Sessie
+ADD CONSTRAINT Sessie_Docent
+FOREIGN KEY (DocentID) REFERENCES Docent(DocentID),
+ADD CONSTRAINT Sessie_Lamp
+FOREIGN KEY (LampID) REFERENCES Lamp(LampID);
+
 
 INSERT INTO Docent (Gebruikersnaam, Wachtwoord, Email)
 VALUES ('Jan_Bakker', 'Jan123', 'jan.bakker@mail.com');
