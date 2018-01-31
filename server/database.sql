@@ -10,7 +10,7 @@ CREATE TABLE `Lamp` (
 
 CREATE TABLE `Sessie` (
   `SessieID` INT AUTO_INCREMENT,
-  `Gemeten_over_se` FLOAT,
+  `Gemiddelde` FLOAT,
   `Starttijd` DATETIME,
   `Eindtijd` DATETIME,
   `DocentID` INT,
