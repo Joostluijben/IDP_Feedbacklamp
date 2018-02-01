@@ -109,7 +109,7 @@ def measure_values(maxValue):
     def generate():
         while True:
             try:
-                page = requests.get('http://192.168.1.27:8080')
+                page = requests.get('https://192.168.1.27:8080')
                 soup = BeautifulSoup(page.content, 'lxml')
                 found = float(soup.find('div', class_='volumeValue').text.strip())
                 color = None

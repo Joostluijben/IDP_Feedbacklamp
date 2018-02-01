@@ -5,4 +5,4 @@ app = Flask(__name__)
 @app.route('/')
 def main():
     return render_template('index.html', value=readAudio())
-app.run('0.0.0.0', 8080)
+app.run('0.0.0.0', 8080, ssl_context=('cert.pem', 'key.pem'))
