@@ -2,23 +2,26 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <meta http-equiv="refresh" content="5" >
     <title></title>
   </head>
   <body>
 
-    <h1>Hallo {{ username }}</h1>
-    <h2>De huidige meting is {{ value[0] }} decibel op {{ value[1] }}</h2>
-    <table>
-      <th>ID</th>
-      <th>Decibel</th>
-      <th>tijd</th>
-      {% for i in range(rows | count) %}
-        <tr>
-          <td>{{ rows[i][0] }}</td>
-          <td>{{ rows[i][1] }}</td>
-          <td>{{ rows[i][2] }}</td>
-        </tr>
-      {% endfor %}
+    <h1>Welkom <b>{{ username }}</b></h1>
+    <p>U bent nu in klaslokaal: <b>{{ classRoom }}</b></p>
+    Gevoeligheid:
+    <form action='' method='post'>
+      <select name='maxValue'>
+        <option value='140,170'>laag</option>
+        <option value='110,140'>midden</option>
+        <option value='95,110'>hoog</option>
+      </select>
+      <br>
+    <input type='submit'>
+    </form>
+    <br>
+    <form action='/' method='get'>
+      <input type='submit' value='Log uit'/>
+    </form>
+
   </body>
 </html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+  </head>
+  <body>
+    {% if error %}
+      <p class='error'><strong>Error: </strong>{{ error }}
+    {% endif %}
+    <p>De laatst gemeten waarde is <b><span id="measurement"></span></b> op <b><span id='time'></span></b></p>
+    <p>De ingestelde maximum waarde is: <b><span id="maxValue"></span></b></p>
+    <form action='' method='post'>
+      <input type='submit' value='Stop meting'/>
+    </form>
+    <p>Dit zijn alle metingen:</p>
+    <table id='valueTable'>
+      <th>Tijd</th>
+      <th>Gemeten waarde</th>
+      <th>Kleur</th>
+      <tr>
+      </tr>
+    </table>
+  </body>
+
+  <script>
+      var table = document.getElementById('valueTable');
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '{{ url_for('measure_values', maxValue=maxValue) }}');
+      xhr.send();
+      var position = 0;
+      function handleNewData() {
+          // the response text include the entire response so far
+          // split the messages, then take the messages that haven't been handled yet
+          // position tracks how many messages have been handled
+          // messages end with a newline, so split will always show one extra empty message at the end
+          var messages = xhr.response.split('\n');
+          //console.log(messages);
+          messages.slice(position, -1).forEach(function(value) {
+              var timeValue = value.split(',')[0];
+              var measureValue = value.split(',')[1];
+              var color = value.split(',')[2];
+
+              var row = table.insertRow(1);
+              var cell1 = row.insertCell(0);
+              var cell2 = row.insertCell(1);
+              var cell3 = row.insertCell(2);
+              cell1.innerHTML = timeValue;
+              cell2.innerHTML = measureValue;
+              cell3.innerHTML = color;
+              time.textContent = timeValue;  // update the latest value in place
+              measurement.textContent = measureValue
+              maxValue.textContent = {{maxValue}}
+
+              // build and append a new item to a list to log all output
+              //var item = document.createElement('td');
+              //item.textContent = timeValue;
+              //output.appendChild(item);
+          });
+          position = messages.length - 1;
+        }
+      var timer;
+      timer = setInterval(function() {
+          // check the response for new data
+          handleNewData();
+          // stop checking once the response has ended
+          if (xhr.readyState == XMLHttpRequest.DONE) {
+              clearInterval(timer);
+              latest.textContent = 'Done';
+          }
+      }, 5000);
+  </script>
+</html>

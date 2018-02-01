@@ -10,11 +10,14 @@
   {% endif %}
   <body>
     <form method='post' action=''>
-
       Gebruikersnaam:<br>
       <input type='text' name='username'><br>
       Wachtwoord:<br>
       <input type='text' name='password'><br>
+      Klaslokaal:<br>
+      <input type='text' name='classRoom'><br>
+      <input type="hidden" value="{{ request.args.get('next', '') }}"/>
       <input type='submit' name='submit'>
+    </form>
   </body>
 </html>

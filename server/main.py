@@ -1,77 +1,30 @@
-from flask import Flask
-from flask import render_template
+from flask import Flask, render_template, request, url_for, redirect, g, session, flash
 import mysql.connector
-from flask import request
-from flask import flash
-from flask import url_for, redirect
 import requests
 import time
-import queue
 import threading
 import requests
 from bs4 import BeautifulSoup
 import datetime
 import time
-
+from functools import wraps
+import random
+import hashlib
+import binascii
+import RPi.GPIO as GPIO
 
 app = Flask(__name__)
+salt = b'\xf5\xbb;\xd8S\xeb\x0b\xf8\xe8\xef\x9d\xab\xa1\xce<\x8c\xfeIP\xfc'
+loudGPIO = 7
+averageGPIO = 11
+silenceGPIO = 22
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(loudGPIO, GPIO.OUT)
+GPIO.setup(averageGPIO, GPIO.OUT)
+GPIO.setup(silenceGPIO, GPIO.OUT)
+
 app.secret_key = 'some_secret'
-
-
-def start_runner():
-    def start_loop():
-        not_started = True
-        while not_started:
-            time.sleep(2)
-            print('In start loop')
-            try:
-                r = requests.get('http://127.0.0.1:8080/')
-                if r.status_code == 200:
-                    print('Server started, quiting start_loop')
-                    not_started = False
-                print(r.status_code)
-            except:
-                print('Server not yet started')
-
-    print('Started runner')
-    thread = threading.Thread(target=start_loop)
-    thread.start()
-
-
-q = queue.Queue()
-
-@app.before_first_request
-def runJob():
-    def checkClient(q):
-        while True:
-            try:
-                page = requests.get('http://192.168.1.25:8080/')
-                soup = BeautifulSoup(page.text, 'html.parser')
-                value = soup.find('div', class_='volumeValue').text.strip()
-                print(value)
-                now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                print(now)
-                q.put([value,now])
-
-                db = mysql.connector.connect(user='root', password='idp',
-                                              host='127.0.0.1',
-                                              database='idp_project')
-                cursor = db.cursor(buffered=True)
-                #cursor.execute("INSERT INTO Sensor (Decibel, Tijd) VALUES (%s, %s);", (value, now))
-                db.commit()
-                cursor.close()
-                db.close()
-                time.sleep(5)
-            except requests.exceptions.ConnectionError:
-                q.put(['Error'], datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-                print('Cannot connect to server retrying in 5 seconds')
-                time.sleep(5)
-                pass
-
-
-    t1 = threading.Thread(target=checkClient, name=checkClient, args=(q,))
-    t1.start()
-
 
 @app.route('/', methods=['POST', 'GET'])
 def main():
@@ -79,14 +32,22 @@ def main():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        hashedPassword = (binascii.hexlify(hashlib.pbkdf2_hmac('sha256', password.encode(), salt, 100000))).decode()
+        classRoom = request.form['classRoom']
         db = mysql.connector.connect(user='root', password='idp',
                                       host='127.0.0.1',
                                       database='idp_project')
         cursor = db.cursor(buffered=True)
-        cursor.execute("SELECT Gebruikersnaam, Wachtwoord FROM Docent")
+        cursor.execute("SELECT Gebruikersnaam, Wachtwoord FROM Docent;")
         for row in cursor:
-            if username == row[0] and password == row[1]:
-                return redirect(url_for('overview', username=username))
+            if username == row[0] and hashedPassword == row[1]:
+                cursor.execute("SELECT Klas FROM Lamp;")
+                for schoolClassDb in cursor:
+                    if schoolClassDb[0] == classRoom:
+                        return redirect(url_for('overview', username=username, classRoom=classRoom))
+                    else:
+                        error = 'Die klas bestaat niet'
+                        pass
             else:
                 error = 'Gebruikersnaam of wachtwoord klopt niet'
                 pass
@@ -94,23 +55,96 @@ def main():
         db.close()
     return render_template('index.html', error=error)
 
+@app.route('/overview/<username>/<classRoom>', methods=['POST', 'GET'])
+def overview(username, classRoom):
+    if request.method == 'POST':
+        maxValue = request.form['maxValue']
 
-@app.route('/overview/<username>', methods=['GET', 'POST'])
-def overview(username):
-    while True:
-        value = q.get()
+        return redirect(url_for('process', username=username,classRoom=classRoom, maxValue=maxValue))
+    return render_template('overview.html', username=username, classRoom=classRoom)
+
+measurements = []
+@app.route('/process/<username>/<classRoom>/<maxValue>', methods=['POST', 'GET'])
+def process(username,classRoom, maxValue):
+    error = None
+    if request.method == 'POST':
+        GPIO.output(loudGPIO, GPIO.LOW)
+        GPIO.output(averageGPIO, GPIO.LOW)
+        GPIO.output(silenceGPIO,GPIO.LOW)
+        try:
+            average = sum(measurements)/len(measurements)
+        except ZeroDivisionError:
+            return redirect(url_for('overview', username=username, classRoom=classRoom))
+        starttime = session.get('starttime')
+        endtime = datetime.datetime.now()
         db = mysql.connector.connect(user='root', password='idp',
                                       host='127.0.0.1',
                                       database='idp_project')
-        cursor = db.cursor(buffered=True)
-        cursor.execute("SELECT * FROM Sensor")
-        rows = []
-        for row in cursor:
-            rows.append((row[0], row[1], row[2]))
-        cursor.close()
-        db.close()
-        return render_template('overview.html', username=username, value=value, rows=rows)
-    return render_template('overview.html', username=username)
+        cursor = db.cursor()
+        try:
+            cursor.execute("SELECT DocentID FROM Docent WHERE Gebruikersnaam = %s;", (username,))
+            docentID = cursor.fetchone()[0]
+            cursor.execute("SELECT LampID FROM Lamp WHERE Klas = %s;", (classRoom,))
+            lampID = cursor.fetchone()[0]
+            cursor.execute("""INSERT INTO Sessie(Gemiddelde, Starttijd, Eindtijd, DocentID, LampID) VALUES (%s, %s, %s, %s, %s);""", (average, starttime, endtime, docentID, lampID))
+            cursor.close()
+            db.commit()
+            db.close()
+            return redirect(url_for('overview', username=username, classRoom=classRoom))
+        except:
+            error = 'Uw klas of uw naam bestaat niet, neem contact op met de beheerder'
+            pass
+    return render_template('process.html', maxValue=maxValue, error=error)
+@app.route('/measure_values/<maxValue>')
+def measure_values(maxValue):
 
-#start_runner()
-app.run('0.0.0.0', 8080, debug=True, threaded=True)
+    setValues = [int(value) for value in maxValue.split(',')]
+    print(setValues)
+    GPIO.output(loudGPIO, GPIO.LOW)
+    GPIO.output(averageGPIO, GPIO.LOW)
+    GPIO.output(silenceGPIO,GPIO.LOW)
+    starttime = datetime.datetime.now()
+    session['starttime'] = starttime
+
+    def generate():
+        while True:
+            try:
+                page = requests.get('http://192.168.1.27:8080')
+                soup = BeautifulSoup(page.content, 'lxml')
+                found = float(soup.find('div', class_='volumeValue').text.strip())
+                color = None
+                #found = random.randrange(1,11)
+                now = datetime.datetime.now().strftime('%H:%M:%S %Y-%m-%d')
+                if found > setValues[1]:
+                    color = 'Rood'
+                elif found > setValues[0] and found < setValues[1]:
+                    color = 'Geel'
+                else:
+                    color = 'Groen'
+                yield '{}, {},{}\n'.format(now,found,color)
+
+                time.sleep(5)
+                GPIO.output(loudGPIO, GPIO.LOW)
+                GPIO.output(averageGPIO, GPIO.LOW)
+                GPIO.output(silenceGPIO,GPIO.LOW)
+                if found > setValues[1]:
+                    GPIO.output(loudGPIO, GPIO.HIGH)
+                elif found > setValues[0] and found < setValues[1]:
+                    GPIO.output(averageGPIO, GPIO.HIGH)
+                else:
+                    GPIO.output(silenceGPIO, GPIO.HIGH)
+                measurements.append(found)
+            except requests.exceptions.ConnectionError:
+                GPIO.output(loudGPIO, GPIO.LOW)
+                GPIO.output(averageGPIO, GPIO.LOW)
+                GPIO.output(silenceGPIO,GPIO.LOW)
+                raise
+            except:
+                GPIO.output(loudGPIO, GPIO.LOW)
+                GPIO.output(averageGPIO, GPIO.LOW)
+                GPIO.output(silenceGPIO,GPIO.LOW)
+                raise
+    return app.response_class(generate())
+
+
+app.run('0.0.0.0', 8080, debug=True, threaded=True, ssl_context=('cert.pem', 'key.pem'))
