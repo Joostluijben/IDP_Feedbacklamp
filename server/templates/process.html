@@ -5,6 +5,7 @@
     <title></title>
   </head>
   <body>
+    <!--show error if any and intialise table and sentences-->
     {% if error %}
       <p class='error'><strong>Error: </strong>{{ error }}
     {% endif %}
@@ -26,21 +27,21 @@
   <script>
       var table = document.getElementById('valueTable');
       var xhr = new XMLHttpRequest();
+      // open the stream on measure_values and parse it to xhr
       xhr.open('GET', '{{ url_for('measure_values', maxValue=maxValue) }}');
       xhr.send();
       var position = 0;
       function handleNewData() {
-          // the response text include the entire response so far
-          // split the messages, then take the messages that haven't been handled yet
-          // position tracks how many messages have been handled
-          // messages end with a newline, so split will always show one extra empty message at the end
+          // get the messages with split newline and make an array
           var messages = xhr.response.split('\n');
-          //console.log(messages);
+          // slice all array so it gets the right values
           messages.slice(position, -1).forEach(function(value) {
+              // get the right values from the array
               var timeValue = value.split(',')[0];
               var measureValue = value.split(',')[1];
               var color = value.split(',')[2];
 
+              // insert the values into the right cell and row (row(0) is headers so I use row(1))
               var row = table.insertRow(1);
               var cell1 = row.insertCell(0);
               var cell2 = row.insertCell(1);
@@ -51,14 +52,11 @@
               time.textContent = timeValue;  // update the latest value in place
               measurement.textContent = measureValue
               maxValue.textContent = {{maxValue}}
-
-              // build and append a new item to a list to log all output
-              //var item = document.createElement('td');
-              //item.textContent = timeValue;
-              //output.appendChild(item);
           });
+          // set the right position for the next message
           position = messages.length - 1;
         }
+      // do this for set interval
       var timer;
       timer = setInterval(function() {
           // check the response for new data
@@ -68,6 +66,6 @@
               clearInterval(timer);
               latest.textContent = 'Done';
           }
-      }, 5000);
+      }, 500);
   </script>
 </html>
