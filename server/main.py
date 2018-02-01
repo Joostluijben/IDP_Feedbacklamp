@@ -10,6 +10,7 @@ import random
 import hashlib
 import binascii
 import RPi.GPIO as GPIO
+import math
 
 app = Flask(__name__)
 # configure salt and set GPIO pins
@@ -120,6 +121,9 @@ def measure_values(maxValue):
                 page = requests.get('http://192.168.1.1:8080')
                 soup = BeautifulSoup(page.content, 'lxml')
                 found = float(soup.find('div', class_='volumeValue').text.strip())
+                if math.isinf(found) == True:
+                    found = 0
+                    pass
                 color = None
                 # compare shown values against set values
                 if found > setValues[1]:
