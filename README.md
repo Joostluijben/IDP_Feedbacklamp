@@ -11,7 +11,8 @@ This project is build upon Python with mainly Flask.<br><br>
 <li>hashlib</li>
 </ul>
 <br>This project assumes that you have 2 Raspberry Pis. One running the server(site) and one being the client(microphone).
-<br>It also assumes that on your server you have your GPIOs setup(BOARD) with<br>
+<br>Besides that, it assumes that you setup your <a href='https://dev.mysql.com/downloads/mysql/'>MySql databae</a> has been setup like database.sql in the server folder<br>
+It also assumes that on your server you have your GPIOs setup(BOARD) with<br>
 GPIO 7 being the red LED<br>
 GPIO 11 the yellow LED<br> 
 GPIO 22 the green LED<br><br>
